@@ -1,6 +1,4 @@
-const tableRows = document.getElementById('bookInventory');
-
-const dictionary = {
+const GTranslator = {
     'Id':{
         'eng': 'Id',
         'rus': 'Идентификатор',
@@ -25,66 +23,150 @@ const dictionary = {
         'eng': 'Language',
         'rus': 'Язык',
         'heb': 'שפה'
+    },
+    'Load Data':{
+        'eng': 'Load Data',
+        'rus': 'Загрузить данные',
+        'heb': 'טען נתונים'
+    },
+    'New Book':{
+        'eng': 'New Book',
+        'rus': 'Новая книга',
+        'heb': 'ספר חדש'
+    },
+    'Book Inventory':{
+        'eng': 'Book Inventory',
+        'rus': 'Инвентарь книг',
+        'heb': 'מלאי ספרים'
     }
 }
 
 let currentPage = 1;
+let orderByField = 'id';
+let orderByDirection = 1; // 1 for ascending, -1 for descending
 
 function getTranslatedText(key) {
-    return dictionary[key][currentLanguage];
+    return GTranslator[key][currentLanguage];
 }
 
-function setLanguageView(){
+function renderBookInventoryHeader() {
+    const header = document.getElementById('bookInventoryHeader');
+    header.innerText = getTranslatedText('Book Inventory');
+}
+
+function renderActionsContainer(){
+    const actionsContainer = document.getElementById('actions-container');
+    const NewBookText = getTranslatedText('New Book');
+    const LoadDataText = getTranslatedText('Load Data');
+
+    actionsContainer.innerHTML = `
+    <li>
+        <button id="add-book-btn" class="btn btn-secondary" onclick="renderAddBook()">
+            <i class="bi bi-plus-circle"></i>
+            ${NewBookText}
+        </button>
+    </li>
+    <li>
+        <button class="btn btn-secondary" onclick="loadData()">
+            <i class="bi bi-cloud-upload"></i>
+            ${LoadDataText}
+        </button>
+    </li>
+    <li>
+        <div class="dropdown" id="languagePicker">
+            <!-- <i class="bi bi-translate"></i> -->
+        </div>
+    </li>`;
+}
+
+function renderLanguagePicker(){
     const picker = document.getElementById('languagePicker');
     const value = `${getTranslatedText('Language')}: ${currentLanguage === 'eng' ? 'English' : currentLanguage === 'rus' ? 'Russian' : 'עברית'}`;
 
-    picker.innerText = `
+    const engActive = currentLanguage === 'eng' ? 'dropdown-item active' : 'dropdown-item';
+    const rusActive = currentLanguage === 'rus' ? 'dropdown-item active' : 'dropdown-item';
+    const hebActive = currentLanguage === 'heb' ? 'dropdown-item active' : 'dropdown-item';
+
+    picker.innerHTML = `
     <button class="btn btn-secondary dropdown-toggle" type="button"
         data-bs-toggle="dropdown" aria-expanded="false" id="chosenLanguage">
         ${value}
     </button>
     <ul class="dropdown-menu dropdown-menu-dark">
-        <li><button class="dropdown-item" index="engLan" onclick="changeLanguage('eng')">English</button></li>
-        <li><button class="dropdown-item" index="rusLan" onclick="changeLanguage('rus')">Russian</button></li>
-        <li><button class="dropdown-item" index="hebLan" onclick="changeLanguage('heb')">Hebrew</button></li>
+        <li><button class="${engActive}" index="engLan" onclick="changeLanguage('eng')">English</button></li>
+        <li><button class="${rusActive}" index="rusLan" onclick="changeLanguage('rus')">Russian</button></li>
+        <li><button class="${hebActive}" index="hebLan" onclick="changeLanguage('heb')">Hebrew</button></li>
     </ul>
     `;
 
-    const rusLan = document.getElementById('rusLan');
-    rusLan.className += currentLanguage === 'rus' ? 'dropdown-item active' : 'dropdown-item';
+    if (currentLanguage == 'heb') {
+        document.documentElement.dir = "rtl";
+    } else {
+        document.documentElement.dir = "ltr";
+    }
 }
 
 //#region Table Rendering
 
+// get table headers with sorting indicators
 function getTableHeaders() {
-    
     const idKey = getTranslatedText('Id');
     const titleKey = getTranslatedText('Title');
     const priceKey = getTranslatedText('Price');
     const actionsKey = getTranslatedText('Actions');
 
-    let tableHeaders = `<thead>
-                <tr class="table-dark">
-                    <th class="table-header">${idKey}<span class="orderby"><i class="bi bi-funnel"></i></th>
-                    <th class="table-header">${titleKey}<span class="orderby"><i class="bi bi-funnel"></i></th>
-                    <th class="table-header">${priceKey}<span class="orderby"><i class="bi bi-funnel"></i></th>
-                    <th colspan="3" class="table-header">${actionsKey}</th>
-                </tr>
-                </thead>
-                `;
+    // Add sort indicator
+    const idSort = orderByField === 'id' ? (orderByDirection === 1 ? '▲' : '▼') : '';
+    const titleSort = orderByField === 'title' ? (orderByDirection === 1 ? '▲' : '▼') : '';
+    const priceSort = orderByField === 'price' ? (orderByDirection === 1 ? '▲' : '▼') : '';
 
+    let tableHeaders = `<thead>
+        <tr class="table-dark">
+            <th class="table-header" onclick="orderBy('id')">${idKey} <span class="orderby"><i class="bi bi-funnel"></i>${idSort}</span></th>
+            <th class="table-header" onclick="orderBy('title')">${titleKey} <span class="orderby"><i class="bi bi-funnel"></i>${titleSort}</span></th>
+            <th class="table-header" onclick="orderBy('price')">${priceKey} <span class="orderby"><i class="bi bi-funnel"></i>${priceSort}</span></th>
+            <th colspan="3" class="table-header">${actionsKey}</th>
+        </tr>
+    </thead>`;
     return tableHeaders;
 }
 
+// set order by field and direction, then re-render table
+function orderBy(field) {
+    if (orderByField === field) {
+        orderByDirection *= -1; // Toggle direction
+    } else {
+        orderByField = field;
+        orderByDirection = 1;
+    }
+    renderBooksTable();
+}
 
+// render books table with pagination and sorting
 function renderBooksTable() {
-    let books = getBooks(currentPage); // get books for current page
+    renderBookInventoryHeader();
 
-    tableToInject = '<tbody>';
+    // Get all books, sort, then paginate
+    let allBooks = booksInventory ? booksInventory.slice() : [];
+    if (orderByField && allBooks.length > 0) {
+        allBooks.sort((a, b) => {
+            let valA = a[orderByField];
+            let valB = b[orderByField];
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            if (valA < valB) return -1 * orderByDirection;
+            if (valA > valB) return 1 * orderByDirection;
+            return 0;
+        });
+    }
+    const startIndex = (currentPage - 1) * (window.GbooksPerPage || 3);
+    const endIndex = startIndex + (window.GbooksPerPage || 3);
+    let books = allBooks.slice(startIndex, endIndex);
 
+    let tableToInject = '<tbody>';
     books.forEach(book => {
         tableToInject += `
-        <tr class="table-primary">
+        <tr class="table-dark">
             <td>${book.id}</td>
             <td>${book.title}</td>
             <td>${book.price}</td>
@@ -98,16 +180,17 @@ function renderBooksTable() {
                 <i class="bi bi-trash"></i>
             </button></td>
         </tr>
-            `
+        `
     });
-
-    tableToInject += '</tbody>'
-
-    tableRows.innerHTML = getTableHeaders() + tableToInject;
-
+    tableToInject += '</tbody>';
+    const tableRows = document.getElementById('bookInventory');
+    if (tableRows) {
+        tableRows.innerHTML = getTableHeaders() + tableToInject;
+    }
     renderPaginator();
 }
 
+// render paginator based on number of pages
 function renderPaginator() {
     const paginator = document.getElementById('paginator');
 
@@ -203,6 +286,7 @@ function addRateView(bookId) {
     const book = getBookById(bookId);
     addRate(book);
     renderViewBook(book);
+    cacheBooks();
 }
 
 // decrease book rate and re-render view
@@ -210,6 +294,7 @@ function decRateView(bookId) {
     const book = getBookById(bookId);
     decRate(book);
     renderViewBook(book);
+    cacheBooks();
 }
 
 // render book price input

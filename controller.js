@@ -3,6 +3,13 @@
 const viewBookButtons = document.getElementsByClassName('table-cell action view');
 
 function init() {
+    getBooksFromLocalStorage();
+    renderPage();
+}
+
+function renderPage(){
+    renderActionsContainer();
+    renderLanguagePicker();
     renderBooksTable();
 }
 
@@ -25,6 +32,7 @@ function editBook(bookId) {
     if (result) {
         renderBooksTable();
         renderViewBook(book);
+        cacheBooks();
     }
     else {
         alert('Invalid input.');
@@ -35,6 +43,7 @@ function deleteBook(bookId) {
     const result = deleteBookById(bookId);
     if (result) {
         renderBooksTable();
+        cacheBooks();
     }
     else {
         alert('Book not found.');
@@ -49,6 +58,7 @@ function addBook() {
     if (result) {
         renderBooksTable();
         renderViewBook(result);
+        cacheBooks();
     }
     else {
         alert('Invalid input.');
@@ -72,6 +82,12 @@ function goToPage(pageNumber) {
 
 function changeLanguage(lang) {
     setLanguage(lang);
-    setLanguageView();
-    renderBooksTable();
+    renderPage();
+}
+
+function loadData(){
+    resetData();
+    cacheBooks();
+    console.log("DATA RESET: reading books from model.js");
+    renderPage();
 }

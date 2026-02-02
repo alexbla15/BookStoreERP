@@ -2,12 +2,10 @@
 
 // model constants and variable
 
-const GbooksPerPage = 2;
-let currentLanguage = 'eng';
-let tableToInject = '';
+const GbooksPerPage = 3;
 
-// initialize book data
-let Gbooks = [
+// minimal book data
+const Gbooks = [
     {
         id: 1,
         title: "The Great Gatsby",
@@ -45,21 +43,41 @@ let Gbooks = [
     }
 ];
 
+let currentLanguage = 'eng';
+let tableToInject = '';
+
+let booksInventory = [];
+
+function getBooksFromLocalStorage(){
+    const cachedBooks = localStorage.getItem('books');
+    booksInventory = JSON.parse(cachedBooks);
+}
+
+function resetData(){
+    booksInventory = Gbooks;
+}
+
+function cacheBooks(){
+    // save initial books inventory in local storage
+    const booksJson = JSON.stringify(booksInventory);
+    localStorage.setItem('books', booksJson);
+}
+
 // count total pages
 function countPages() {
-    return Math.ceil(Gbooks.length / GbooksPerPage);
+    return Math.ceil(booksInventory.length / GbooksPerPage);
 }
 
 // get books for a specific page
 function getBooks(page) {
     const startIndex = (page - 1) * GbooksPerPage;
     const endIndex = startIndex + GbooksPerPage;
-    return Gbooks.slice(startIndex, endIndex);
+    return booksInventory.slice(startIndex, endIndex);
 }
 
 // get book by ID
 function getBookById(bookId) {
-    return Gbooks.find(book => book.id === bookId);
+    return booksInventory.find(book => book.id === bookId);
 }
 
 // increase book rate
@@ -91,9 +109,9 @@ function editBookDetails(bookId, newTitle, newPrice, newUrl) {
 
 // delete book by ID
 function deleteBookById(bookId) {
-    const bookIndex = Gbooks.findIndex(book => book.id === bookId);
+    const bookIndex = booksInventory.findIndex(book => book.id === bookId);
     if (bookIndex !== -1) {
-        Gbooks.splice(bookIndex, 1);
+        booksInventory.splice(bookIndex, 1);
         return true;
     }
     return false;
@@ -103,14 +121,14 @@ function deleteBookById(bookId) {
 function addBookDetails(newTitle, newPrice, newUrl) {
     if (newTitle && !isNaN(newPrice) && newPrice >= 0 && newUrl) {
         const newBook = {
-            id: Gbooks.length > 0 ? Gbooks[Gbooks.length - 1].id + 1 : 1,
+            id: booksInventory.length > 0 ? booksInventory[booksInventory.length - 1].id + 1 : 1,
             title: newTitle,
             price: newPrice,
             url: newUrl,
             rate: 0
         };
-        Gbooks.push(newBook);
-        return Gbooks[Gbooks.length - 1];
+        booksInventory.push(newBook);
+        return booksInventory[booksInventory.length - 1];
     }
     return false;
 }
