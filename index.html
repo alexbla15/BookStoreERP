@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body onload="init()">
+    <main>
+        <div class="px-3 py-2 text-bg-dark border-bottom">
+            <div class="container">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                    <a href="/"
+                        class="d-flex column-gap-3 align-items-center mb-2 my-2 my-lg-0 me-lg-auto text-white text-decoration-none">
+                        <i class="bi bi-book logo-icon"></i>
+                        <div class="fs-4">Bookshop ERP</div>
+                    </a>
+                    <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small column-gap-3">
+                        <li>
+                            <button id="add-book-btn" class="btn btn-secondary" onclick="renderAddBook()">
+                                <i class="bi bi-plus-circle"></i>
+                                New Book
+                            </button>
+                        </li>
+                        <li>
+                            <div class="btn btn-secondary">
+                                <i class="bi bi-cloud-upload"></i>
+                                Load Data
+                            </div>
+                        </li>
+                        <li>
+                            <div class="dropdown" index="languagePicker">
+                                
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <section class="container mt-3 mb-3">
+            <div class="row">
+            <div class="col card text-bg-light mb-3">
+                <div class="card-header">
+                    <h4 class="card-title">Book Inventory</h4>
+                </div>
+                <table id="bookInventory" class="table table-hover table-striped">
+                    <!-- RENDERED BY VIEW.JS -->
+                </table>
+                <ul id="paginator" class="pagination justify-content-center">
+                    <!-- RENDERED BY VIEW.JS -->
+                </ul>
+            </div>
+
+            <section class="col-5" id="action-section"></section>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="model.js" async defer></script>
+    <script src="view.js" async defer></script>
+    <script src="controller.js" async defer></script>
+</body>
+
+</html>
