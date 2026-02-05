@@ -1,60 +1,97 @@
 'use strict';
 
+class Book{
+    constructor(id, title, author, price, url, rate){
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.price = price;
+        this.url = url;
+        this.rate = rate;
+    }
+
+    addRate(){
+        if (this.rate < 5) {
+            this.rate += 0.5;
+        }
+    }
+
+    decRate(){
+        if (this.rate > 0) {
+            this.rate -= 0.5;
+        }
+    }
+
+    edit(title, author, price, url)
+    {
+        console.log(title, author, price, url);
+        if (!title || !author || isNaN(price) || price < 0 || !url)
+            return false;
+
+        this.title = title;
+        this.author = author;
+        this.price = price;
+        this.url = url;
+        return true;
+    }
+
+    static fromJson(obj)
+    {
+        return new Book(obj.id, obj.title, obj.author, obj.price, obj.url, obj.rate);
+    }
+}
+
 // model constants and variable
 
-const GbooksPerPage = 3;
+//#region Constants
+
+const GbooksPerPage = 2;
 
 // minimal book data
 const Gbooks = [
-    {
-        id: 1,
-        title: "The Great Gatsby",
-        price: 10.99,
-        url: "https://upload.wikimedia.org/wikipedia/commons/7/7a/The_Great_Gatsby_Cover_1925_Retouched.jpg",
-        rate: 1
-    },
-    {
-        id: 2,
-        title: "1984",
-        price: 8.99,
-        url: "https://upload.wikimedia.org/wikipedia/commons/5/51/1984_first_edition_cover.jpg",
-        rate: 2
-    },
-    {
-        id: 3,
-        title: "To Kill a Mockingbird",
-        price: 12.49,
-        url: "https://upload.wikimedia.org/wikipedia/commons/4/4f/To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg",
-        rate: 3
-    },
-    {
-        id: 4,
-        title: "Pride and Prejudice",
-        price: 9.99,
-        url: "https://upload.wikimedia.org/wikipedia/commons/1/17/PrideAndPrejudiceTitlePage.jpg",
-        rate: 4
-    },
-    {
-        id: 5,
-        title: "The Catcher in the Rye",
-        price: 11.50,
-        url: "https://upload.wikimedia.org/wikipedia/commons/8/8e/Catcher-in-the-rye-red-cover.jpg",
-        rate: 5
-    }
+    new Book(1, "The Greate Gatsby", "F. Scott Fitzgerald", 10.99, 
+        "https://upload.wikimedia.org/wikipedia/commons/7/7a/The_Great_Gatsby_Cover_1925_Retouched.jpg",
+    1),
+    new Book(2, "1984", "George Orwell", 8.79, 
+        "https://upload.wikimedia.org/wikipedia/commons/5/51/1984_first_edition_cover.jpg",
+    2),
+    new Book(3, "To Kill a Mockingbird", "Harper Lee", 12.49, 
+        "https://upload.wikimedia.org/wikipedia/commons/4/4f/To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg",
+    3),
+    new Book(4, "Pride and Prejudice", "Jane Austen", 1.04, 
+        "https://upload.wikimedia.org/wikipedia/commons/1/17/PrideAndPrejudiceTitlePage.jpg",
+    4),
+    new Book(5, "The Catcher in the Rye", "J.D. Salinger", 11.50, 
+        "https://upload.wikimedia.org/wikipedia/commons/8/8e/Catcher-in-the-rye-red-cover.jpg",
+    5)
 ];
+
+//#endregion
+
+//#region Variables
 
 let currentLanguage = 'eng';
 let tableToInject = '';
 
 let booksInventory = [];
 
+//#endregion
+
 function getBooksFromLocalStorage(){
     const cachedBooks = localStorage.getItem('books');
-    booksInventory = JSON.parse(cachedBooks);
+    const jsonArray = JSON.parse(cachedBooks);
+    booksInventory = jsonArray.map(Book.fromJson);
+    
+    if (!Array.isArray(booksInventory))
+    {
+        console.log("local storage damaged");
+        return;
+    }
 }
 
 function resetData(){
-    booksInventory = Gbooks;
+    booksInventory = JSON.parse(JSON.stringify(Gbooks));;
+    console.log(Gbooks);
 }
 
 function cacheBooks(){
@@ -80,31 +117,14 @@ function getBookById(bookId) {
     return booksInventory.find(book => book.id === bookId);
 }
 
-// increase book rate
-function addRate(book) {
-    if (book.rate < 5) {
-        book.rate += 1;
-    }
-}
-
-// decrease book rate
-function decRate(book) {
-    if (book.rate > 0) {
-        book.rate -= 1;
-    }
-}
-
 // edit existing book details
-function editBookDetails(bookId, newTitle, newPrice, newUrl) {
+function editBookDetails(bookId, newTitle, newAuthor, newPrice, newUrl) {
     const book = getBookById(bookId);
-    if (book && newTitle && !isNaN(newPrice) && newPrice >= 0 && newUrl) {
-        book.title = newTitle;
-        book.price = newPrice;
-        book.url = newUrl;
-        return true;
-    }
+    console.log(book);
+    if (!book)
+        return false;
 
-    return false;
+    return book.edit(newTitle, newAuthor, newPrice, newUrl);
 }
 
 // delete book by ID
@@ -118,15 +138,10 @@ function deleteBookById(bookId) {
 }
 
 // add a new book
-function addBookDetails(newTitle, newPrice, newUrl) {
-    if (newTitle && !isNaN(newPrice) && newPrice >= 0 && newUrl) {
-        const newBook = {
-            id: booksInventory.length > 0 ? booksInventory[booksInventory.length - 1].id + 1 : 1,
-            title: newTitle,
-            price: newPrice,
-            url: newUrl,
-            rate: 0
-        };
+function addBookDetails(newTitle, newAuthor, newPrice, newUrl) {
+    if (newTitle && newAuthor && !isNaN(newPrice) && newPrice >= 0 && newUrl) {
+        const newId = booksInventory.length > 0 ? booksInventory[booksInventory.length - 1].id + 1 : 1;
+        const newBook = new Book(newId, newTitle, newAuthor, newPrice, newUrl, 0);
         booksInventory.push(newBook);
         return booksInventory[booksInventory.length - 1];
     }
@@ -160,4 +175,10 @@ function setPageNumber(pageNumber) {
 
 function setLanguage(lang) {
     currentLanguage = lang;
+}
+
+// function the resets the ids according to order of the array
+function resetIds()
+{
+    booksInventory.forEach(book => book.id = booksInventory.indexOf(book) + 1);
 }

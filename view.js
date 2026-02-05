@@ -9,10 +9,25 @@ const GTranslator = {
         'rus': 'Название',
         'heb': 'כותרת'
     },
+    'Author':{
+        'eng': 'Author',
+        'rus': 'Автор',
+        'heb': 'מחבר/ת'
+    },
     'Price':{
         'eng': 'Price',
         'rus': 'Цена',
         'heb': 'מחיר'
+    },
+    'Rate':{
+        'eng': 'Rate',
+        'rus': 'рейтинг',
+        'heb': 'דירוג'
+    },
+    'Url':{
+        'eng': 'Url',
+        'rus': 'Url',
+        'heb': 'Url'
     },
     'Actions':{
         'eng': 'Actions',
@@ -29,6 +44,11 @@ const GTranslator = {
         'rus': 'Загрузить данные',
         'heb': 'טען נתונים'
     },
+    'Edit Book':{
+        'eng': 'Edit Book',
+        'rus': 'Редактирование',
+        'heb': 'עריכת ספר'
+    },
     'New Book':{
         'eng': 'New Book',
         'rus': 'Новая книга',
@@ -38,8 +58,25 @@ const GTranslator = {
         'eng': 'Book Inventory',
         'rus': 'Инвентарь книг',
         'heb': 'מלאי ספרים'
+    },
+    'Submit':{
+        'eng': 'Submit',
+        'rus': 'подавать',
+        'heb': 'אישור'
+    },
+    'Required':{
+        'eng': 'Required.',
+        'rus': 'Необходимый.',
+        'heb': 'נדרש.'
+    },
+    'RequiredPrice':{
+        'eng': 'Required. Please enter a positive price.',
+        'rus': 'Обязательно. Пожалуйста, введите фактическую цену.',
+        'heb': 'נדרש. אנא הזן מחיר מציאותי.'
     }
 }
+
+const GTitle = "Bookshop ERP";
 
 let currentPage = 1;
 let orderByField = 'id';
@@ -49,9 +86,27 @@ function getTranslatedText(key) {
     return GTranslator[key][currentLanguage];
 }
 
-function renderBookInventoryHeader() {
-    const header = document.getElementById('bookInventoryHeader');
-    header.innerText = getTranslatedText('Book Inventory');
+//#region Top Nav Bar Rendering
+
+function renderTopNavBar()
+{
+    const topnavbar = document.getElementById('topnavbar');
+
+    topnavbar.innerHTML = `
+    <div class="navbar-brand">
+        <a class="navbar-item is-size-4" href="/">
+            <i class="fa-solid fa-book"></i>
+            ${GTitle}
+        </a>
+    </div>
+    <div class="navbar-end">
+        <div class="navbar-item" id="actions-container">
+            
+        </div>
+    </div>`;
+
+    renderActionsContainer();
+    renderLanguagePicker();
 }
 
 function renderActionsContainer(){
@@ -60,44 +115,58 @@ function renderActionsContainer(){
     const LoadDataText = getTranslatedText('Load Data');
 
     actionsContainer.innerHTML = `
-    <li>
-        <button id="add-book-btn" class="btn btn-secondary" onclick="renderAddBook()">
-            <i class="bi bi-plus-circle"></i>
-            ${NewBookText}
-        </button>
-    </li>
-    <li>
-        <button class="btn btn-secondary" onclick="loadData()">
-            <i class="bi bi-cloud-upload"></i>
-            ${LoadDataText}
-        </button>
-    </li>
-    <li>
-        <div class="dropdown" id="languagePicker">
-            <!-- <i class="bi bi-translate"></i> -->
-        </div>
-    </li>`;
+    <div class="field is-grouped">
+        <p class="control">
+            <button class="bd-tw-button button is-light" id="add-book-btn" onclick="renderAddBook()">
+            <span class="icon">
+                <i class="fa-solid fa-circle-plus has-text-primary-35"></i>
+            </span>
+            <span> ${NewBookText} </span>
+            </button>
+        </p>
+        <p class="control">
+            <button class="bd-tw-button button is-light" id="add-book-btn" onclick="loadData()">
+            <span class="icon">
+                <i class="fa-solid fa-download has-text-primary-35"></i>
+            </span>
+            <span> ${LoadDataText} </span>
+            </a>
+            </button>
+        </p>
+        <p class="control" id="languagePicker">
+        </p>
+    </div>`;
 }
 
 function renderLanguagePicker(){
     const picker = document.getElementById('languagePicker');
     const value = `${getTranslatedText('Language')}: ${currentLanguage === 'eng' ? 'English' : currentLanguage === 'rus' ? 'Russian' : 'עברית'}`;
 
-    const engActive = currentLanguage === 'eng' ? 'dropdown-item active' : 'dropdown-item';
-    const rusActive = currentLanguage === 'rus' ? 'dropdown-item active' : 'dropdown-item';
-    const hebActive = currentLanguage === 'heb' ? 'dropdown-item active' : 'dropdown-item';
+    const engActive = currentLanguage === 'eng' ? 'dropdown-item is-active' : 'dropdown-item';
+    const rusActive = currentLanguage === 'rus' ? 'dropdown-item is-active' : 'dropdown-item';
+    const hebActive = currentLanguage === 'heb' ? 'dropdown-item is-active' : 'dropdown-item';
 
-    picker.innerHTML = `
-    <button class="btn btn-secondary dropdown-toggle" type="button"
-        data-bs-toggle="dropdown" aria-expanded="false" id="chosenLanguage">
-        ${value}
-    </button>
-    <ul class="dropdown-menu dropdown-menu-dark">
-        <li><button class="${engActive}" index="engLan" onclick="changeLanguage('eng')">English</button></li>
-        <li><button class="${rusActive}" index="rusLan" onclick="changeLanguage('rus')">Russian</button></li>
-        <li><button class="${hebActive}" index="hebLan" onclick="changeLanguage('heb')">Hebrew</button></li>
-    </ul>
-    `;
+    picker.innerHTML=`
+    <div class="dropdown" id="languagepickerdropdown" onclick="languagePickerClicked()">
+        <div class="dropdown-trigger">
+            <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                <span class="icon">
+                    <i class="fa-solid fa-language has-text-primary-35"></i>
+                </span>
+                <span>${value}</span>
+                <span class="icon is-small">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+        <div class="dropdown-menu" id="dropdown-menu" role="menu">
+            <div class="dropdown-content">
+                <button class="${engActive}" index="engLan" onclick="changeLanguage('eng')">English</button>
+                <button class="${rusActive}" index="rusLan" onclick="changeLanguage('rus')">Russian</button>
+                <button class="${hebActive}" index="hebLan" onclick="changeLanguage('heb')">Hebrew</button>
+            </div>
+        </div>
+    </div>`;
 
     if (currentLanguage == 'heb') {
         document.documentElement.dir = "rtl";
@@ -106,29 +175,86 @@ function renderLanguagePicker(){
     }
 }
 
+//#endregion
+
 //#region Table Rendering
+
+function renderBookInventoryHeader() {
+    const header = document.getElementById('bookInventoryHeader');
+    header.innerText = getTranslatedText('Book Inventory');
+}
+
+function renderBookInventory(){
+    const table = document.getElementById('bookInventoryTableAndActions');
+
+    table.innerHTML = `
+        <div class="columns">
+            <div class="column is-two-thirds">
+                <div class="card">
+                    <header class="card-header">
+                        <div class="card-header-title is-size-5" id="bookInventoryHeader"></div>
+                    </header>
+                    <div class="card-content">
+                        <div class="card">
+                            <table id="bookInventory" class="table is-hoverable is-striped is-fullwidth">
+                                <!-- RENDERED BY VIEW.JS -->
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <p class="card-footer-item" id="paginator">
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="column" id="action-section">
+                <!-- RENDERED BY VIEW.JS -->
+            </section>
+        </div>
+    `;
+
+    renderBookInventoryHeader();
+    renderBooksTable();
+}
 
 // get table headers with sorting indicators
 function getTableHeaders() {
     const idKey = getTranslatedText('Id');
     const titleKey = getTranslatedText('Title');
+    const authorKey = getTranslatedText('Author');
     const priceKey = getTranslatedText('Price');
     const actionsKey = getTranslatedText('Actions');
 
     // Add sort indicator
-    const idSort = orderByField === 'id' ? (orderByDirection === 1 ? '▲' : '▼') : '';
-    const titleSort = orderByField === 'title' ? (orderByDirection === 1 ? '▲' : '▼') : '';
-    const priceSort = orderByField === 'price' ? (orderByDirection === 1 ? '▲' : '▼') : '';
+    const idSort = sortIcon('id');
+    const titleSort = sortIcon('title');
+    const authorSort = sortIcon('author');
+    const priceSort = sortIcon('price');
+
+    const buttonClass = `button is-primary is-light is-small is-rounded`;
 
     let tableHeaders = `<thead>
-        <tr class="table-dark">
-            <th class="table-header" onclick="orderBy('id')">${idKey} <span class="orderby"><i class="bi bi-funnel"></i>${idSort}</span></th>
-            <th class="table-header" onclick="orderBy('title')">${titleKey} <span class="orderby"><i class="bi bi-funnel"></i>${titleSort}</span></th>
-            <th class="table-header" onclick="orderBy('price')">${priceKey} <span class="orderby"><i class="bi bi-funnel"></i>${priceSort}</span></th>
+        <tr class="is-primary">
+            <th class="is-flex-wrap-nowrap">${idKey} <button class="${buttonClass}" onclick="orderBy('id')">${idSort}</button></th>
+            <th>${titleKey} <button class="${buttonClass}" onclick="orderBy('title')">${titleSort}</button></th>
+            <th>${authorKey} <button class="${buttonClass}" onclick="orderBy('author')">${authorSort}</button></th>
+            <th>${priceKey} <button class="${buttonClass}" onclick="orderBy('price')">${priceSort}</button></th>
             <th colspan="3" class="table-header">${actionsKey}</th>
         </tr>
     </thead>`;
     return tableHeaders;
+}
+
+function sortIcon(field)
+{
+    // const iconColor = `has-text-primary-light`;
+    const iconColor = ``;
+    const sortUpIcon = `<i class="fa-solid ${iconColor} fa-arrow-up-wide-short"></i>`;
+    const sortDownIcon = `<i class="fa-solid ${iconColor} fa-arrow-down-short-wide"></i>`;
+    const filterIcon = `<i class="fa-solid ${iconColor} fa-filter"></i>`;
+
+    return orderByField === field ? (orderByDirection === 1 ? sortDownIcon :  sortUpIcon) : filterIcon;
 }
 
 // set order by field and direction, then re-render table
@@ -144,8 +270,6 @@ function orderBy(field) {
 
 // render books table with pagination and sorting
 function renderBooksTable() {
-    renderBookInventoryHeader();
-
     // Get all books, sort, then paginate
     let allBooks = booksInventory ? booksInventory.slice() : [];
     if (orderByField && allBooks.length > 0) {
@@ -159,8 +283,8 @@ function renderBooksTable() {
             return 0;
         });
     }
-    const startIndex = (currentPage - 1) * (window.GbooksPerPage || 3);
-    const endIndex = startIndex + (window.GbooksPerPage || 3);
+    const startIndex = (currentPage - 1) * GbooksPerPage;
+    const endIndex = startIndex + GbooksPerPage;
     let books = allBooks.slice(startIndex, endIndex);
 
     let tableToInject = '<tbody>';
@@ -169,15 +293,16 @@ function renderBooksTable() {
         <tr class="table-dark">
             <td>${book.id}</td>
             <td>${book.title}</td>
+            <td>${book.author}</td>
             <td>${book.price}</td>
-            <td><button class="btn btn-primary btn-sm" onclick="viewBook(${book.id})">
-                <i class="bi bi-eyeglasses"></i>
+            <td><button class="button is-info btn-sm" onclick="viewBook(${book.id})">
+                <i class="fa-solid fa-glasses"></i>
             </button></td>
-            <td><button class="btn btn-primary btn-sm" onclick="viewEditBook(${book.id})">
-                <i class="bi bi-pencil-square"></i>
+            <td><button class="button is-warning btn-sm" onclick="viewEditBook(${book.id})">
+                <i class="fa-solid fa-pen-to-square"></i>
             </button></td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteBook(${book.id})">
-                <i class="bi bi-trash"></i>
+            <td><button class="button is-danger btn-sm" onclick="deleteBook(${book.id})">
+                <i class="fa-solid fa-trash"></i>
             </button></td>
         </tr>
         `
@@ -190,41 +315,61 @@ function renderBooksTable() {
     renderPaginator();
 }
 
+function renderPaginatorPage(activeClass, pageNumber){
+    return `
+    <li>
+        <button class="button ${activeClass}" aria-label="Page ${pageNumber}" 
+        aria-current="page" onclick="goToPage(${pageNumber})">${pageNumber}</button>
+    </li>`
+}
+
 // render paginator based on number of pages
 function renderPaginator() {
     const paginator = document.getElementById('paginator');
 
+    paginator.innerHTML = ``;
+
     // amount of pages in this table
     const pages = countPages();
 
-    if (pages === 0) 
+    if (pages <= 1) 
         return;
 
-    const disableGoBack = currentPage > 1 ? '' : 'disabled';
-    const disableGoForward = currentPage < pages ? '' : 'disabled';
+    const disableGoBack = currentPage > 1 ? '' : 'is-disabled';
+    const disableGoForward = currentPage < pages ? '' : 'is-disabled';
     
-    // add previous button
-    paginator.innerHTML = `<li class="page-item ${disableGoBack}">
-                        <button class="page-link" aria-label="Previous" onclick="goToPreviousPage()">
-                            <span aria-hidden="true"><i class="bi bi-caret-left-fill"></i></span>
-                        </button>
-                    </li>`;
-
     // add pages
-    for (let i = 1; i <= pages; i++) {
-        const activeClass = currentPage === i ? 'active' : '';
-        paginator.innerHTML += `
-        <li class="page-item">
-            <button class="page-link ${activeClass}" onclick="goToPage(${i})">${i}</a>
-        </li>`;
+    let paginationList = ``;
+    let activeClass = currentPage === 1 ? 'is-current has-background-primary' : '';
+    paginationList += `
+            ${renderPaginatorPage(activeClass, 1)}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>`;
+
+    // index for middle paginator numbers
+    const middleMinIndex = Math.ceil(pages / 2);
+
+    if (middleMinIndex < pages && middleMinIndex != 1)
+    {
+        activeClass = currentPage === middleMinIndex ? 'is-current has-background-primary' : '';
+        paginationList += renderPaginatorPage(activeClass, middleMinIndex);
     }
 
-    // add forward button
-    paginator.innerHTML += `<li class="page-item ${disableGoForward}">
-                        <button class="page-link" aria-label="Next" onclick="goToNextPage()">
-                            <span aria-hidden="true"><i class="bi bi-caret-right-fill"></i></span>
-                        </button>
-                    </li>`;
+    activeClass = currentPage === pages ? 'is-current has-background-primary' : '';
+    paginationList += `
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+            ${renderPaginatorPage(activeClass, pages)}`;
+
+    paginator.innerHTML = `
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+        <a class="pagination-previous ${disableGoBack}" onclick="goToPage(1)"><i class="fa-solid fa-backward-fast"></i></a>
+        <a class="pagination-previous ${disableGoBack}" onclick="goToPreviousPage()"><i class="fa-solid fa-backward-step"></i></a>
+        <a class="pagination-next ${disableGoForward}" onclick="goToNextPage()"><i class="fa-solid fa-forward"></i></a>
+        <a class="pagination-next ${disableGoForward}" onclick="goToPage(${pages})"><i class="fa-solid fa-forward-fast"></i></a>
+        <ul class="pagination-list">
+            ${paginationList}
+        </ul>
+    </nav>`
+
 }
 
 //#endregion
@@ -236,26 +381,26 @@ function renderViewBook(book) {
     const actionSection = document.getElementById('action-section');
 
     actionSection.innerHTML = `
-<div class="card text-bg-light mb-3">
-    <div class="card-header">
-        <h4 class="card-title">${book.title}</h4>
-    </div>
-    <div class="card-body container">
-        <div class="container d-flex column-gap-4">
-            <div class="col">
-                <img src="${book.url}" alt="${book.title} Cover" class="img-fluid rounded" alt="${book.title} Cover">
-            </div>
-            <div class="col">
-                <p class="card-text"><u>Price</u>: $${book.price}</p>
-                <p class="card-text" id="rate_${book.id}"><u>Rate</u>: </p>
-                <div class="container d-flex column-gap-2">
-                    <button class="col btn btn-success btn-sm" onclick="addRateView(${book.id})">
-                        <i class="bi bi-plus"></i>
-                    </button>
-                    <button class="col btn btn-danger btn-sm" onclick="decRateView(${book.id})">
-                        <i class="bi bi-dash"></i>
-                    </button>
-                </div>
+<div class="card is-clipped">
+    <div class="card-content">
+        <div class="columns">
+        <div class="column">
+            <figure class="image">
+            <img src="${book.url}" alt="${book.title}"/>
+            </figure>
+        </div>
+        <div class="column">
+            <p class="title is-4">${book.title}</p>
+            <p class="subtitle is-6 has-text-info">@${book.author}</p>
+            <p class="card-text"><span class="has-text-weight-semibold">${getTranslatedText('Price')}</span>: $${book.price}</p>
+            <p class="card-text" id="rate_${book.id}"><span class="has-text-weight-semibold">${getTranslatedText('Rate')}</span>: </p>
+            <div class="buttons mt-2">
+                <button class="button is-success is-small" onclick="addRateView(${book.id})">
+                    <span class="icon is-small"><i class="fa-solid fa-thumbs-up"></i></span>
+                </button>
+                <button class="button is-danger is-small" onclick="decRateView(${book.id})">
+                    <span class="icon is-small"><i class="fa-solid fa-thumbs-down"></i></i></span>
+                </button>
             </div>
         </div>
     </div>
@@ -263,28 +408,155 @@ function renderViewBook(book) {
 `;
 
     const bookRate = document.getElementById(`rate_${book.id}`);
-    for (let i = 0; i < book.rate; i++) {
-        bookRate.innerHTML += `<i class="bi bi-star-fill"></i>`;
+    for (let i = 0; i < Math.floor(book.rate); i++) {
+        bookRate.innerHTML += `<i class="fa-solid fa-star has-text-info"></i>`;
     }
+
+    if (book.rate - Math.floor(book.rate) == 0.5)
+    {
+        bookRate.innerHTML += `<i class="fa-solid fa-star-half-stroke has-text-info"></i>`;
+    }
+}
+
+function addBookTitleListener(book){
+    const id = book.id ? `editTitle${book.id}` : `addTitle`;
+    const input = document.getElementById(id);
+    const icon = document.getElementById(`${id}ValidationIcon`);
+    const help = document.getElementById(`${id}Help`);
+    
+
+    input.addEventListener('input', (e) => {
+        if (e.target.value.trim() === "")
+        {
+            input.classList.remove('is-success');
+            input.classList.add('is-danger');
+            icon.className = 'fa-solid fa-triangle-exclamation';
+            help.innerText = getTranslatedText('Required');
+        }
+        else
+        {
+            input.classList.add('is-success');
+            input.classList.remove('is-danger');
+            icon.className = 'fas fa-check';
+            help.innerText = '';
+        }
+    })
+}
+
+function addBookAuthorListener(book){
+    const id = book.id ? `editAuthor${book.id}` : `addAuthor`;
+    const input = document.getElementById(id);
+    const icon = document.getElementById(`${id}ValidationIcon`);
+    const help = document.getElementById(`${id}Help`);
+
+    input.addEventListener('input', (e) => {
+        if (e.target.value.trim() === "")
+        {
+            input.classList.remove('is-success');
+            input.classList.add('is-danger');
+            icon.className = 'fa-solid fa-triangle-exclamation';
+            help.innerText = getTranslatedText('Required');;
+        }
+        else
+        {
+            input.classList.add('is-success');
+            input.classList.remove('is-danger');
+            icon.className = 'fas fa-check';
+            help.innerText = '';
+        }
+    })
+}
+
+function addBookPriceListener(book){
+    const id = book.id ? `editPrice${book.id}` : `addPrice`;
+    const input = document.getElementById(id);
+    const icon = document.getElementById(`${id}ValidationIcon`);
+    const help = document.getElementById(`${id}Help`);
+
+    input.addEventListener('input', (e) => {
+        if (e.target.value.trim() === "" || e.target.value < 0)
+        {
+            input.classList.remove('is-success');
+            input.classList.add('is-danger');
+            icon.className = 'fa-solid fa-triangle-exclamation';
+            help.innerText = getTranslatedText('RequiredPrice');
+        }
+        else
+        {
+            input.classList.add('is-success');
+            input.classList.remove('is-danger');
+            icon.className = 'fas fa-check';
+            help.innerText = '';
+        }
+    })
+}
+
+function addBookUrlListener(book){
+    const id = book.id ? `editUrl${book.id}` : `addUrl`;
+    const input = document.getElementById(id);
+    const help = document.getElementById(`${id}Help`);
+    const icon = document.getElementById(`${id}ValidationIcon`);
+    
+    input.addEventListener('input', (e) => {
+        if (e.target.value.trim() === "")
+        {
+            input.classList.remove('is-success');
+            input.classList.add('is-danger');
+            help.innerText = 'Required.';
+            icon.className = 'fa-solid fa-triangle-exclamation';
+        }
+        else
+        {
+            input.classList.add('is-success');
+            input.classList.remove('is-danger');
+            help.innerText = '';
+            icon.className = 'fas fa-check';
+        }
+    });
 }
 
 // render book title input
 function renderBookTitle(book) {
     const id = book.id ? `editTitle${book.id}` : `addTitle`;
 
-    return `<div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-alphabet-uppercase"></i></span>
-                <div class="form-floating">
-                    <input required type="text" class="form-control" id="${id}" placeholder="Title" value="${book.title}">
-                    <label for="${id}">Title</label>
-                </div>
-            </div>`;
+    return `
+    <div class="field">
+        <div class="control has-icons-left has-icons-right">
+            <input class="input is-success" id="${id}" type="text" placeholder="${getTranslatedText('Title')}" value="${book.title}">
+            <span class="icon is-small is-left">
+                <i class="fa-solid fa-at"></i>
+            </span>
+            <span class="icon is-small is-right">
+                <i id="${id}ValidationIcon" class="fas fa-check"></i>
+            </span>
+        </div>
+        <p class="help is-danger" id="${id}Help"></p>
+    </div>`;
+}
+
+// render book author input
+function renderAuthor(book) {
+    const id = book.id ? `editAuthor${book.id}` : `addAuthor`;
+
+    return `
+    <div class="field">
+        <div class="control has-icons-left has-icons-right">
+            <input class="input is-success" id="${id}" type="text" placeholder="${getTranslatedText('Author')}" value="${book.author}">
+            <span class="icon is-small is-left">
+                <i class="fa-solid fa-user-graduate"></i>
+            </span>
+            <span class="icon is-small is-right">
+                <i id="${id}ValidationIcon" class="fas fa-check"></i>
+            </span>
+        </div>
+        <p class="help is-danger" id="${id}Help"></p>
+    </div>`;
 }
 
 // increase book rate and re-render view
 function addRateView(bookId) {
     const book = getBookById(bookId);
-    addRate(book);
+    book.addRate();
     renderViewBook(book);
     cacheBooks();
 }
@@ -292,7 +564,7 @@ function addRateView(bookId) {
 // decrease book rate and re-render view
 function decRateView(bookId) {
     const book = getBookById(bookId);
-    decRate(book);
+    book.decRate();
     renderViewBook(book);
     cacheBooks();
 }
@@ -301,31 +573,52 @@ function decRateView(bookId) {
 function renderBookPrice(book) {
     const id = book.id ? `editPrice${book.id}` : `addPrice`;
 
-    return `<div class="input-group has-validation mb-3">
-                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                <div class="form-floating">
-                    <input required type="number" class="form-control" id="${id}" placeholder="Price" value="${book.price}">
-                    <label for="${id}">Price</label>
-                </div>
-            </div>`;
+    return `
+    <div class="field">
+        <div class="control has-icons-left has-icons-right">
+            <input class="input is-success" id="${id}" type="number" placeholder="${getTranslatedText('Price')}" value="${book.price}">
+            <span class="icon is-small is-left">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </span>
+            <span class="icon is-small is-right">
+                <i id="${id}ValidationIcon" class="fas fa-check"></i>
+            </span>
+        </div>
+        <p class="help is-danger" id="${id}Help"></p>
+    </div>`;
 }
 
 // render book url input
 function renderBookUrl(book) {
     const id = book.id ? `editUrl${book.id}` : `addUrl`;
 
-    return `<div class="input-group has-validation mb-3">
-                <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
-                <textarea class="form-control" placeholder="Url" aria-label="EditUrl" id="${id}" required>${book.url}</textarea>
-            </div>`;
+    return `
+    <div class="field">
+        <div class="control has-icons-left has-icons-right">
+            <input class="input is-success" id="${id}" type="text" placeholder="${getTranslatedText('Url')}" value="${book.url}">
+            <span class="icon is-small is-left">
+                <i class="fas fa-upload"></i>
+            </span>
+            <span class="icon is-small is-right">
+                <i id="${id}ValidationIcon" class="fas fa-check"></i>
+            </span>
+        </div>
+        <p class="help is-danger" id="${id}Help"></p>
+    </div>`;
 }
 
 // render submit button for edit or add
 function renderSubmitButton(book) {
-    if (book.id)
-        return `<button type="button" class="btn btn-primary" onclick="editBook(${book.id})">Submit</button>`;
-    else
-        return `<button type="button" class="btn btn-primary" onclick="addBook()">Submit</button>`;
+    let btn = book.id ? 
+        `<button class="button is-primary" onclick="editBook(${book.id})">${getTranslatedText('Submit')}</button>` :
+        `<button class="button is-primary" onclick="addBook()">${getTranslatedText('Submit')}</button>`;
+
+    return `
+    <div class="field">
+        <div class="control">
+        ${btn}
+        </div>
+    </div>`;
 }
 
 // render edit book form
@@ -333,19 +626,19 @@ function renderEditBook(book) {
     const actionSection = document.getElementById('action-section');
 
     actionSection.innerHTML = `
-<div class="card text-bg-light mb-3">
-    <div class="card-header">
-        <h4 class="card-title">Edit: ${book.title}</h4>
-    </div>
-    <div class="card-body">
-        <form class="was-validated">` 
+<div class="card">
+    <header class="card-header">
+        <div class="card-header-title is-size-5">${getTranslatedText('Edit Book')}</div>
+    </header>
+    <div class="card-content">` 
         + 
         renderBookTitle(book) +
+        renderAuthor(book) +
         renderBookPrice(book) +
         renderBookUrl(book) +
-        renderSubmitButton(book) +
+        renderSubmitButton(book) 
+        +
         `
-        </form>
     </div>
 </div>
 `;
@@ -358,28 +651,38 @@ function renderAddBook() {
     const book = {
         id: '',
         title: '',
+        author: '',
         price: '',
         url: '',
         rate: 0
     };
 
     actionSection.innerHTML = `
-<div class="card text-bg-light mb-3">
-    <div class="card-header">
-        <h4 class="card-title">New Book</h4>
-    </div>
-    <div class="card-body">
-        <form class="was-validated">` 
+<div class="card">
+    <header class="card-header">
+        <div class="card-header-title is-size-5">${getTranslatedText('New Book')}</div>
+    </header>
+    <div class="card-content">` 
         + 
         renderBookTitle(book) +
+        renderAuthor(book) +
         renderBookPrice(book) +
         renderBookUrl(book) +
-        renderSubmitButton(book) +
+        renderSubmitButton(book) 
+        +
         `
-        </form>
     </div>
 </div>
 `;
+
+    addFormListeners(book);
+}
+
+function addFormListeners(book){
+    addBookTitleListener(book);
+    addBookAuthorListener(book);
+    addBookPriceListener(book);
+    addBookUrlListener(book);
 }
 
 //#endregion
