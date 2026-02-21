@@ -1,0 +1,16 @@
+{
+  "name": "bookstoreerp",
+  "version": "1.0.0",
+  "description": "MY FIRST ERP",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alex Blahman",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "fs": "^0.0.1-security"
+  }
+}
